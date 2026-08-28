@@ -1,0 +1,52 @@
+{
+  "name": "besnovatyj/yii2-cms-accessibility",
+  "description": "Панель доступности (версия для слабовидящих) для Yii2 CMS",
+  "type": "yii2-extension",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Besnovatyj",
+      "email": "your-email@example.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "extra": {
+    "moduleClass": "Besnovatyj\\Accessibility\\Module",
+    "moduleId": "Accessibility",
+    "bescms": {
+      "kind": "module"
+    },
+    "config-plugin": {
+      "common": "src/config/common.php"
+    }
+  },
+  "keywords": [
+    "yii2",
+    "cms",
+    "accessibility",
+    "a11y"
+  ],
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "yiisoft/yii2-composer": true
+    },
+    "fxp-asset": {
+      "enabled": false
+    }
+  },
+  "require": {
+    "php": ">=8.4",
+    "besnovatyj/yii2-cms-contracts": "^1.0",
+    "besnovatyj/yii2-cms-kernel": "^1.0",
+    "yiisoft/yii2": "~2.0.0"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-latest"
+  },
+  "autoload": {
+    "psr-4": {
+      "Besnovatyj\\Accessibility\\": "src/"
+    }
+  }
+}
