@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Besnovatyj\Accessibility\widgets;
 
+use Besnovatyj\Accessibility\Module;
 use Yii;
 use yii\base\Widget;
 use yii\helpers\Html;
@@ -76,6 +77,15 @@ final class AccessibilityButton extends Widget
      */
     public function run(): string
     {
+        // Кнопка, открывающая несуществующую панель, хуже отсутствия кнопки:
+        // человек нажимает, и ничего не происходит. Поэтому при выключенном
+        // модуле не выводим ничего — панель в этом состоянии тоже пуста.
+        if (!Module::isActive()) {
+            return '';
+        }
+
+        Module::registerTranslations();
+
         $label = $this->label ?? Yii::t('accessibility', 'Версия для слабовидящих');
 
         $options = $this->options;

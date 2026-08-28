@@ -8,17 +8,15 @@ declare(strict_types=1);
 
 namespace Besnovatyj\Accessibility;
 
-use Yii;
 use yii\base\Application;
 use yii\base\BootstrapInterface;
-use yii\i18n\PhpMessageSource;
 
 /**
  * Bootstrap модуля.
  *
- * Регистрирует алиас пакета и источник переводов. Алиас задаётся явно от
- * __DIR__, а не берётся из composer-плагина: так пакет одинаково работает
- * и установленным через composer, и подключённым напрямую.
+ * Вся работа — в {@see Module::registerTranslations()}: там же её вызывают
+ * виджеты, поэтому регистрация алиаса и переводов не зависит от того, дошёл ли
+ * до модуля bootstrap приложения.
  */
 class Bootstrap implements BootstrapInterface
 {
@@ -27,14 +25,6 @@ class Bootstrap implements BootstrapInterface
      */
     public function bootstrap($app): void
     {
-        Yii::setAlias('@bes-accessibility', dirname(__DIR__));
-
-        // Исходный язык строк пакета — русский: они так и написаны в коде.
-        // Английский подтягивается из messages/en, если приложение переключат.
-        $app->getI18n()->translations['accessibility'] ??= [
-            'class' => PhpMessageSource::class,
-            'sourceLanguage' => 'ru-RU',
-            'basePath' => '@bes-accessibility/src/messages',
-        ];
+        Module::registerTranslations();
     }
 }

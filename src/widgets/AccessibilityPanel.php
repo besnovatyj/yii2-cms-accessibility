@@ -57,11 +57,23 @@ final class AccessibilityPanel extends Widget
     private array $params = [];
 
     /**
+     * Подключён ли модуль. Пока нет — виджет ничего не делает и ничего не ломает.
+     */
+    private bool $active = false;
+
+    /**
      * {@inheritdoc}
      */
     public function init(): void
     {
         parent::init();
+
+        $this->active = Module::isActive();
+        if (!$this->active) {
+            return;
+        }
+
+        Module::registerTranslations();
 
         $this->params = $this->moduleParams();
 
@@ -77,6 +89,10 @@ final class AccessibilityPanel extends Widget
      */
     public function run(): string
     {
+        if (!$this->active) {
+            return '';
+        }
+
         return $this->render('panel', [
             'panelId' => $this->panelId,
             'options' => $this->options,
@@ -152,9 +168,11 @@ final class AccessibilityPanel extends Widget
     }
 
     /**
-     * Параметры модуля. Если модуль не подключён, виджет работает на дефолтах —
-     * это допустимо: панель может понадобиться теме раньше, чем администратор
-     * дойдёт до настроек.
+     * Параметры модуля.
+     *
+     * Вызывается только после Module::isActive(), поэтому модуль здесь заведомо
+     * есть. Пустой массив на выходе означает не «модуля нет», а «настройки ещё
+     * не трогали» — каждый ключ читается с собственным значением по умолчанию.
      *
      * @return array<string, mixed>
      */
