@@ -31,8 +31,9 @@ const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabi
  * Панель настроек.
  *
  * Доступность самой панели — отдельная работа, и она здесь сделана: ловушка
- * фокуса, закрытие по Escape, возврат фокуса на кнопку, которой панель открыли,
- * `inert` в закрытом состоянии, живой `aria-expanded` на кнопках вызова.
+ * фокуса, закрытие по Escape и по нажатию мимо панели, возврат фокуса на кнопку,
+ * которой панель открыли, `inert` в закрытом состоянии, живой `aria-expanded`
+ * на кнопках вызова.
  *
  * Это не перестраховка. Панелью пользуются в том числе те, кто не видит экрана
  * и ходит по странице с клавиатуры: инструмент доступности, до которого нельзя
@@ -74,6 +75,45 @@ export class Panel {
         }
     };
 
+    /**
+     * Закрытие нажатием мимо панели.
+     *
+     * Стандартам это не противоречит: ГОСТ Р 52872-2019 и WCAG требуют, чтобы
+     * панель можно было закрыть с клавиатуры и чтобы фокус вернулся откуда пришёл
+     * (и то, и другое ниже сделано), но самого способа закрытия не предписывают.
+     * Для модального диалога «нажатие по фону закрывает» — обычное поведение,
+     * которого человек и ждёт. Настройки при этом не теряются: они уже сохранены,
+     * панель лишь уходит с экрана.
+     *
+     * pointerdown, а не click, по двум причинам. Во-первых, панель открывается
+     * по click, а pointerdown того же нажатия проходит РАНЬШЕ — слушатель,
+     * навешенный в open(), своё же открытие не увидит и не закроет панель
+     * мгновенно. Во-вторых, реакция на нажатие ощущается быстрее отпускания.
+     *
+     * Фаза перехвата: пока панель открыта, остальная страница под inert, и клики
+     * по ней всё равно достаются <body>. Перехват гарантирует, что нас не обойдёт
+     * чужой обработчик, остановивший всплытие.
+     */
+    private readonly onPointerDown = (event: PointerEvent): void => {
+        const target = event.target;
+        if (!(target instanceof Element)) {
+            return;
+        }
+
+        // Своё не считаем «мимо»: и панель, и наложения пакета (линейка чтения).
+        if (target.closest(`.${UI_CLASS}`) !== null) {
+            return;
+        }
+
+        // Кнопка вызова тоже: у неё свой переключатель, иначе нажатие закрыло бы
+        // панель здесь и тут же открыло обратно в bindOpeners.
+        if (target.closest(`[${ATTR.open}]`) !== null) {
+            return;
+        }
+
+        this.close();
+    };
+
     public constructor(
         root: HTMLElement,
         private readonly controller: AccessibilityController,
@@ -100,17 +140,24 @@ export class Panel {
         return root === null ? null : new Panel(root, controller);
     }
 
+    /** Открыта ли панель. Состояние не дублируем — источник один, класс на корне. */
+    public get isOpen(): boolean {
+        return this.root.classList.contains('is-open');
+    }
+
     public open(opener?: HTMLElement): void {
         this.opener = opener ?? null;
         this.setOpen(true);
 
         document.addEventListener('keydown', this.onKeydown);
+        document.addEventListener('pointerdown', this.onPointerDown, true);
         this.focusable()[0]?.focus();
     }
 
     public close(): void {
         this.setOpen(false);
         document.removeEventListener('keydown', this.onKeydown);
+        document.removeEventListener('pointerdown', this.onPointerDown, true);
 
         // Возврат фокуса туда, откуда пришли: без этого фокус улетает в начало
         // документа, и человек на клавиатуре теряет место, где был.
@@ -185,6 +232,18 @@ export class Panel {
             }
 
             event.preventDefault();
+
+            // Именно переключатель. На кнопке живёт aria-expanded, а контрол
+            // с aria-expanded="true" обязан по нажатию сворачивать то, чем управляет:
+            // иначе скринридер обещает одно, а происходит другое. Заодно это
+            // единственный способ закрыть панель нажатием по самой кнопке —
+            // закрытие «мимо» её намеренно не трогает.
+            if (this.isOpen) {
+                this.close();
+
+                return;
+            }
+
             this.open(opener);
         });
     }
