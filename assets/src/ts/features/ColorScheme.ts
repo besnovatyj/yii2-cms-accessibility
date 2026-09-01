@@ -64,6 +64,17 @@ export const ColorScheme: Feature = {
             `background-color:${bg}!important;color:${fg}!important;`,
             `border-color:${fg}!important;background-image:none!important;`,
             `box-shadow:none!important;text-shadow:none!important;`,
+            // Текст, залитый градиентом через background-clip: text, красится
+            // НЕ свойством color, а фоном элемента: у таких глифов стоит
+            // -webkit-text-fill-color: transparent. Без сброса ниже строки выше
+            // делают ровно наоборот задуманного — гасят градиент и заливают фон
+            // цветом bg, отчего текст сливается с фоном подчистую. Приём частый
+            // (анимированные пункты меню, «наливающиеся» заголовки), и на глаз
+            // он неотличим от обычного текста, пока схему не включат.
+            // currentColor, а не литерал: у ссылок ниже свой цвет, и текст должен
+            // взять именно его.
+            `-webkit-text-fill-color:currentColor!important;`,
+            `background-clip:border-box!important;-webkit-background-clip:border-box!important;`,
             `}`,
 
             // Ссылки — акцентом и обязательно подчёркиванием: при двухцветной
