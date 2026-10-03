@@ -28,7 +28,6 @@ class Module extends CmsModule implements
     ProvidesOptions
 {
     public const bool EDITABLE = true;
-    public const string VERSION = '1.0.0';
     public const string MODULE_ID = 'Accessibility';
 
     /** Чтобы не писать в лог одно и то же на каждый виджет страницы. */
@@ -89,11 +88,6 @@ class Module extends CmsModule implements
     public static function moduleId(): string
     {
         return self::MODULE_ID;
-    }
-
-    public static function moduleVersion(): string
-    {
-        return self::VERSION;
     }
 
     public static function isEditable(): bool
